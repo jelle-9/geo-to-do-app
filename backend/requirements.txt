@@ -1,0 +1,7 @@
+# backend/requirements.txt
+Flask # oder django
+psycopg2-binary # Für PostgreSQL-Verbindung
+SQLAlchemy # Wenn du Flask mit SQLAlchemy nutzt
+GeoAlchemy2 # Für PostGIS mit SQLAlchemy
+python-dotenv # Zum Laden der .env Datei
+# ... andere Abhängigkeiten (z.B. Flask-CORS, gunicorn für Produktion)

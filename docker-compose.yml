@@ -1,0 +1,70 @@
+# docker-compose.yml
+version: '3.8' # Spezifiziert die Version der Docker Compose Syntax
+
+services:
+  # Backend Service (Python App)
+  backend:
+    build: ./backend # Pfad zum Verzeichnis mit dem Backend-Dockerfile
+    container_name: geo_backend # Name des Containers
+    ports:
+      # Mappt Port 5000 des Containers auf Port 5000 des Host-Systems
+      # Ändere dies ggf. auf 8000:8000 für Django
+      - "5000:5000"
+    volumes:
+      # Mountet den lokalen backend-Ordner in den /app Ordner im Container
+      # Änderungen im lokalen Code werden sofort im Container sichtbar (Live Reload)
+      - ./backend:/app
+    env_file:
+      - ./backend/.env # Lädt Umgebungsvariablen aus der .env Datei
+    depends_on:
+      db:
+        condition: service_healthy # Startet erst, wenn der DB-Service "healthy" ist
+    restart: unless-stopped
+
+  # Frontend Service (Ionic/Angular App)
+  frontend:
+    build: ./frontend # Pfad zum Verzeichnis mit dem Frontend-Dockerfile
+    container_name: geo_frontend # Name des Containers
+    ports:
+      # Mappt die Ionic Ports auf das Host-System
+      - "8100:8100" # App Port
+      - "35729:35729" # Live Reload Port
+    volumes:
+      # Mountet den lokalen frontend-Ordner in den /app Ordner im Container
+      - ./frontend:/app
+      # WICHTIG: Verhindert, dass der lokale node_modules Ordner (falls vorhanden)
+      # den im Container installierten überschreibt. Dies ist ein "named volume mount trick".
+      - /app/node_modules
+    # Optional: hängt vom Backend ab, falls es beim Start benötigt wird
+    # depends_on:
+    #   - backend
+    restart: unless-stopped
+
+  # Datenbank Service (PostgreSQL + PostGIS)
+  db:
+    image: postgis/postgis:15-3.4 # Offizielles PostGIS Image (wähle passende Version)
+    container_name: geo_db # Name des Containers
+    environment:
+      # Setzt Benutzer, Passwort und Datenbankname
+      # Diese Werte MÜSSEN mit denen in backend/.env übereinstimmen!
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: geodb
+    volumes:
+      # Persistiert die Datenbankdaten in einem Docker Volume namens 'pgdata'
+      # So gehen die Daten nicht verloren, wenn der Container gestoppt wird.
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Mappt den PostgreSQL Port, falls du direkt von deinem Host darauf zugreifen willst
+      - "5432:5432"
+    healthcheck:
+      # Prüft periodisch, ob die Datenbank bereit ist
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+# Definiert das benannte Volume für die Persistenz der Datenbankdaten
+volumes:
+  pgdata:
