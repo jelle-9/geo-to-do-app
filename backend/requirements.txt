@@ -1,7 +1,12 @@
 # backend/requirements.txt
-Flask # oder django
-psycopg2-binary # Für PostgreSQL-Verbindung
-SQLAlchemy # Wenn du Flask mit SQLAlchemy nutzt
-GeoAlchemy2 # Für PostGIS mit SQLAlchemy
-python-dotenv # Zum Laden der .env Datei
-# ... andere Abhängigkeiten (z.B. Flask-CORS, gunicorn für Produktion)
+Flask>=3.0.0              # Haupt-Webframework
+Flask-SQLAlchemy>=3.0.0   # Vereinfacht SQLAlchemy-Nutzung mit Flask (stellt db.Model etc.)
+Flask-Migrate>=4.0.0      # Für Datenbank-Migrationen mit Alembic
+SQLAlchemy>=2.0.0         # Der ORM selbst
+GeoAlchemy2>=0.14.0       # Für PostGIS-Datentypen und -Funktionen mit SQLAlchemy
+psycopg2-binary           # PostgreSQL-Treiber (die binäre Version ist oft einfacher zu installieren)
+python-dotenv>=1.0.0      # Zum Laden von .env-Dateien
+Flask-CORS>=4.0.0         # Um Cross-Origin Requests vom Frontend (anderer Port) zu erlauben
+
+# Für die Produktion später (nicht zwingend für Entwicklung):
+# gunicorn
