@@ -4,7 +4,7 @@ import os
 from flask import Flask, jsonify # jsonify hinzugefügt für die Test-Route
 from flask_sqlalchemy import SQLAlchemy
 
-#from flask_migrate import Migrate
+from flask_migrate import Migrate
 #from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -20,7 +20,7 @@ else:
 # Erstelle Instanzen der Erweiterungen global
 db = SQLAlchemy()
 
-#migrate = Migrate()
+migrate = Migrate()
 #cors = CORS()
 
 def create_app(config_name=None):
@@ -41,7 +41,7 @@ def create_app(config_name=None):
     # --- Erweiterungen mit der App initialisieren ---
     db.init_app(app)
 
-    # migrate.init_app(app, db)
+    migrate.init_app(app, db)
     # cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Behalten wir für später, wenn /api genutzt wird
 
     # --- Blueprints registrieren ---
@@ -56,8 +56,8 @@ def create_app(config_name=None):
     # --- Datenbankmodelle bekannt machen ---
     # Vorerst auskommentiert, da app/models.py noch nicht existiert oder die Modelle noch nicht definiert sind:
     # print("INFO: Modell-Import ist momentan auskommentiert.")
-    # with app.app_context():
-    #     from . import models
+    with app.app_context():
+        from . import models
 
     # +++ Eine einfache Test-Route direkt hier, um zu sehen, ob die App startet +++
     @app.route('/ping')
