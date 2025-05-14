@@ -5,7 +5,7 @@ from flask import Flask, jsonify # jsonify hinzugefügt für die Test-Route
 from flask_sqlalchemy import SQLAlchemy
 
 from flask_migrate import Migrate
-#from flask_cors import CORS
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Lade Umgebungsvariablen aus der .env-Datei im backend-Verzeichnis
@@ -21,7 +21,7 @@ else:
 db = SQLAlchemy()
 
 migrate = Migrate()
-#cors = CORS()
+cors = CORS()
 
 def create_app(config_name=None):
     """
@@ -42,13 +42,13 @@ def create_app(config_name=None):
     db.init_app(app)
 
     migrate.init_app(app, db)
-    # cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Behalten wir für später, wenn /api genutzt wird
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Behalten wir für später, wenn /api genutzt wird
 
     # --- Blueprints registrieren ---
     # Vorerst auskommentiert, da die entsprechenden Dateien/Blueprints noch nicht existieren:
     # print("INFO: Blueprint-Importe und -Registrierungen sind momentan auskommentiert.")
-    # from .api.tasks import tasks_bp
-    # app.register_blueprint(tasks_bp, url_prefix='/api')
+    from .api.tasks import tasks_bp
+    app.register_blueprint(tasks_bp, url_prefix='/api')
 
     # from .main_routes import main_bp
     # app.register_blueprint(main_bp)
