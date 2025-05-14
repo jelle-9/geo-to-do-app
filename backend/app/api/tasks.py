@@ -14,7 +14,7 @@ def create_task():
     data = request.get_json()
 
     new_task = Task(
-        title=datea.get('title'),
+        title=data.get('title'),
         description=data.get('description')
     )
 
