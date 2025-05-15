@@ -16,7 +16,9 @@ class Task(db.Model):
     is_done: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # TODO: Geo-Daten hinzufügen
     
     def __repr__(self):
         return f"<Task {self.id}: {self.title}>"

@@ -4,6 +4,8 @@ from .. import db
 
 tasks_bp = Blueprint('tasks', __name__)
 
+# TODO: Fehlerbehandlung und Validierung hinzufügen
+
 # Route zum Erstellen einer neuen Aufgabe
 # Erreichbar unter POST /api/tasks (da /api in __init__.py als Präfix für diesen Blueprint gesetzt wird)
 @tasks_bp.route('/tasks', methods=['POST'])
