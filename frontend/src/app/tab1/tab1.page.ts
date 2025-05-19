@@ -6,6 +6,8 @@ import { Task } from '../models/task.interface';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 
+import { AlertController, ModalController } from '@ionic/angular/standalone';
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -18,7 +20,11 @@ export class Tab1Page {
   isLoading: boolean = false;
   errorMessage: string | null = null;
 
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private alertCtrl: AlertController,
+    private modalCtrl: ModalController
+  ) {}
 
   ionViewWillEnter() {
     this.loadTasks();
@@ -44,5 +50,38 @@ export class Tab1Page {
         console.log('Laden der Tasks abgeschlossen (Observable complete).'); // Log bei Abschluss
       }
     })
+  }
+
+  async onDeleteTask(taskId: number) {
+    console.log(`Lösche Task mit ID: ${taskId}`);
+
+    const alert = await this.alertCtrl.create({
+      header: 'Löschen bestätigen',
+      message: 'Möchtest du diese Aufgabe wirklich löschen?',
+      buttons: [
+        {
+          text: 'Abbrechen',
+          role: 'cancel',
+        },
+        {
+          text: 'Löschen',
+          handler: () => {
+            this.taskService.deleteTask(taskId).subscribe({
+              next: () => {
+                console.log('Task erfolgreich vom Backend gelöscht');
+                // Aktualisiere die lokale Liste, indem der gelöschte Task entfernt wird
+                this.tasks = this.tasks.filter(task => task.id !== taskId);
+                // Optional: Erfolgs-Toast anzeigen
+              },
+              error: (err) => {
+                console.error('Fehler beim Löschen des Tasks:', err);
+                // Optional: Fehler-Toast anzeigen
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 }
