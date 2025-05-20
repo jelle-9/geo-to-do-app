@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Neue Aufgabe erstellen</ion-title>
+    <ion-title>{{ pageTitle }}</ion-title>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
     </ion-buttons>
@@ -19,6 +19,6 @@
   </ion-item>
 
   <ion-button expand="block" (click)="saveTask()" [disabled]="!taskTitle || taskTitle.trim() === ''" style="margin-top: 20px;">
-    Aufgabe speichern
+    {{ isEditMode ? 'Änderungen speichern' : 'Aufgabe erstellen' }}
   </ion-button>
 </ion-content>

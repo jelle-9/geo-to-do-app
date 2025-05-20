@@ -10,7 +10,7 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    provideIonicAngular(),
+    provideIonicAngular({}),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptorsFromDi()),
   ],

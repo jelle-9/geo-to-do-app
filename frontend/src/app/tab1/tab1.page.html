@@ -13,9 +13,6 @@
     </ion-toolbar>
   </ion-header>
 
-  
-
-
 
   <div *ngIf="isLoading" style="text-align: center; padding: 20px;">
     <ion-spinner name="crescent"></ion-spinner>
@@ -33,19 +30,27 @@
       <img alt="Silhouette of mountains" src="https://ionicframework.com/docs/img/demos/card-media.png" />
       <ion-card-header>
         <ion-card-title>{{ task.title }}</ion-card-title>
-        <ion-card-subtitle>Card Subtitle</ion-card-subtitle>
+        <ion-card-subtitle>Erstellt: {{ task.created_at | date:'dd.MM.yyyy HH:mm' }}</ion-card-subtitle>
+        <ion-card-subtitle>Geändert: {{ task.updated_at | date:'dd.MM.yyyy HH:mm' }}</ion-card-subtitle>
       </ion-card-header>
 
       <ion-card-content>
         {{ task.description }}
       </ion-card-content>
-      <ion-button>
-        Erledigt
+
+      <ion-item>
+        <ion-label>Erledigt:</ion-label>
+        <ion-toggle slot="end" 
+                    [checked]="task.is_done"></ion-toggle>
+      </ion-item>
+
+      <ion-button fill="clear" (click)="onEditTask(task)">
+        <ion-icon slot="start" name="create-outline"></ion-icon>
+        Bearbeiten
       </ion-button>
-      <ion-button >
-        Ändern
-      </ion-button>
-      <ion-button (click)="onDeleteTask(task.id)">
+
+      <ion-button fill="clear" color="danger" (click)="onDeleteTask(task.id)">
+        <ion-icon slot="start" name="trash-outline"></ion-icon>
         Löschen
       </ion-button>
     </ion-card>
@@ -55,5 +60,11 @@
   <div *ngIf="!isLoading && !errorMessage && tasks.length === 0" style="text_align: center; padding: 20px;">
     <p>Keine Aufgaben vom Backend erhalten.</p>
   </div>
+
+  <ion-fab slot="fixed" verticlal="bottom" horizontal="end">
+    <ion-fab-button (click)="navigateToAddTaskPage()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
 </ion-content>

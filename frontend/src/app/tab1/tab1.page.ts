@@ -6,7 +6,7 @@ import { Task } from '../models/task.interface';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 
-import { AlertController, ModalController } from '@ionic/angular/standalone';
+import { AlertController, ModalController, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-tab1',
@@ -23,13 +23,15 @@ export class Tab1Page {
   constructor(
     private taskService: TaskService,
     private alertCtrl: AlertController,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private navCtrl: NavController
   ) {}
 
   ionViewWillEnter() {
     this.loadTasks();
   }
 
+  // Funktion zum Laden der Aufgaben
   loadTasks() {
     this.isLoading = true;
     this.errorMessage = null;
@@ -52,6 +54,7 @@ export class Tab1Page {
     })
   }
 
+  // Funktion zum Löschen eines Tasks
   async onDeleteTask(taskId: number) {
     console.log(`Lösche Task mit ID: ${taskId}`);
 
@@ -83,5 +86,21 @@ export class Tab1Page {
       ]
     });
     await alert.present();
+  }
+
+  // Funktion zum Bearbeiten eines Tasks
+  async onEditTask(task: Task) {
+    console.log('Bearbeite Task:', task);
+
+    this.navCtrl.navigateForward('/tabs/tab2', {
+      state: {
+        taskToEdit: task // Übergebe den Task zur Bearbeitung
+      }
+    });
+  }
+
+  // Funktion zum Navigieren zur Seite zum Hinzufügen eines neuen Tasks
+  navigateToAddTaskPage() {
+    this.navCtrl.navigateForward('/tabs/tab2');
   }
 }
