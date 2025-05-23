@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 
 import { TaskService } from '../services/task.service';
 import { Task } from '../models/task.interface';
@@ -8,6 +8,9 @@ import { IonicModule } from '@ionic/angular';
 
 import { AlertController, ModalController, NavController } from '@ionic/angular/standalone';
 
+import * as L from 'leaflet';
+//import { mapToCanDeactivate } from '@angular/router';
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -15,10 +18,14 @@ import { AlertController, ModalController, NavController } from '@ionic/angular/
   imports: [IonicModule, CommonModule],
   standalone: true,
 })
-export class Tab1Page {
+export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   tasks: Task[] = [];
   isLoading: boolean = false;
   errorMessage: string | null = null;
+  private maps: Map<string, L.Map> = new Map();
+
+  private defaultLatitude: number = 52.5200 ;
+  private defaultLongitude: number = 13.4050 ;
 
   constructor(
     private taskService: TaskService,
@@ -29,6 +36,59 @@ export class Tab1Page {
 
   ionViewWillEnter() {
     this.loadTasks();
+  }
+
+  ngOnInit(): void {
+    
+  }
+
+  ngAfterViewInit(): void {
+    
+  }
+
+  // Map init fonktion
+  private initMaps() {
+
+    // Map erstmal entleeren, before neue 
+    this.maps.forEach(mapInstance => {
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+    });
+
+    this.maps.clear();
+      
+      this.tasks.forEach(task => {
+
+        const mapId = `map-${task.id}`;
+
+        if(document.getElementById(mapId)) {
+
+          const latitude = task.latitude !== undefined ? task.latitude : this.defaultLatitude;
+          const longitude = task.longitude !== undefined ? task.longitude : this.defaultLongitude;
+
+          const map = L.map(mapId).setView([latitude, longitude], 13);
+
+          L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', 
+            {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'})
+            .addTo(map);
+
+          L.marker([latitude, longitude])
+            .addTo(map);
+            // .bindPopup(`<b>${task.title}</b><br>Emplacement fixe`).openPopup();
+          this.maps.set(mapId, map);
+
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 100); 
+        } else {
+          console.warn(`Element with ID ${mapId} not found. Map not initialized for task ${task.id}.`);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    
   }
 
   // Funktion zum Laden der Aufgaben
@@ -42,6 +102,10 @@ export class Tab1Page {
         this.tasks = data;
         this.isLoading = false;
         console.log('Tasks erfolgreich geladen:', this.tasks);
+
+        setTimeout(() => {
+          this.initMaps();
+        }, 0);
       },
       error: (err) => {
         console.error('Fehler beim Laden der Tasks:', err); // Log bei Fehler

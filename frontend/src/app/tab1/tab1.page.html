@@ -26,8 +26,10 @@
 
   <ion-list *ngIf="!isLoading && !errorMessage && tasks.length > 0">
 
-    <ion-card *ngFor="let task of tasks" class="ion-margin-bottom" style="width: 400px;">
-      <img alt="Silhouette of mountains" src="https://ionicframework.com/docs/img/demos/card-media.png" />
+    <ion-card *ngFor="let task of tasks" class="ion-margin-bottom" >
+      <div id="map-{{task.id}}" style="height: 200px; width: 100%;">
+        
+      </div>
       <ion-card-header>
         <ion-card-title>{{ task.title }}</ion-card-title>
         <ion-card-subtitle>Erstellt: {{ task.created_at | date:'dd.MM.yyyy HH:mm' }}</ion-card-subtitle>
