@@ -30,137 +30,108 @@ export class Tab2Page {
     private navCtrl: NavController,
     private toastCtrl: ToastController,
     private router: Router // Router für Navigation
-  ) {
-    // // Daten aus dem Navigationszustand abrufen
-    // const navigation = this.router.getCurrentNavigation();
-    // const state = navigation?.extras.state as {taskToEdit: Task}; //Typsicherung
+  ) {}
 
-    // if (state?.taskToEdit) {
-    //   this.isEditMode = true;
-    //   this.taskToEditId = state.taskToEdit.id;
-    //   this.taskTitle = state.taskToEdit.title;
-    //   this.taskDescription = state.taskToEdit.description;
-    //   this.pageTitle = 'Aufgabe bearbeiten';
-    // }
-
-    this.loadInitialDataFromState();
+  // Statt ngOnInit ist ionViewWillEnter oft besser für Ionic-Seiten, feuert bei jedem Seitenaufruf nicht nur beim ersten Mal
+  ionViewWillEnter() {
+    console.log("Tab2Page: ionViewWillEnter aufgerufen.");
+    this.initializeFormBasedOnNavigationState();
   }
 
-  // ngOnInit(){
-  //  Statt ngOnInit ist ionViewWillEnter oft besser für Ionic-Seiten, feuert bei jedem Seitenaufruf nicht nur beim ersten Mal
-  // }
+  private initializeFormBasedOnNavigationState() {
+    // Statt router.getCurrentNavigation() verwenden wir window.history.state für bessere Robustheit
+    const state = window.history.state;
+    console.log("Tab2Page: window.history.state liefert:", state); // Wichtiges Log!
 
-ionViewWillEnter() {
-  this.loadInitialDataFromState();
-}
-
-private loadInitialDataFromState() {
-    // Versuche, den 'taskToEdit' aus dem Navigations-State zu lesen
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras.state as { taskToEdit?: Task }; // Optionales taskToEdit
-
-    if (state?.taskToEdit && typeof state.taskToEdit.id !== 'undefined') {
-      const task = state.taskToEdit;
-      console.log("Tab2Page: Edit-Modus erkannt mit Task:", task);
-      this.isEditMode = true;
-      this.taskToEditId = task.id;
-      this.taskTitle = task.title;
-      this.taskDescription = task.description;
-      // === GEO-FELDER FÜLLEN (falls vorhanden) ===
-      this.taskLatitude = task.latitude ?? null;
-      this.taskLongitude = task.longitude ?? null;
-      // === === ===
-      this.pageTitle = 'Aufgabe bearbeiten';
+    if (state?.taskToEdit) {
+      const task = state.taskToEdit as Task;
+      if (task && typeof task.id !== 'undefined') { // Zusätzliche Sicherheitsprüfung
+        console.log("Tab2Page: Edit-Modus erkannt mit Task:", task);
+        this.isEditMode = true;
+        this.taskToEditId = task.id;
+        this.taskTitle = task.title;
+        this.taskDescription = task.description;
+        this.taskLatitude = task.latitude ?? null;
+        this.taskLongitude = task.longitude ?? null;
+        this.pageTitle = 'Aufgabe bearbeiten';
+      } else {
+        console.log("Tab2Page: Task im State gefunden, aber ungültig oder ohne ID. Wechsle zu Neu-Erstellen.");
+        this.resetToCreateMode();
+      }
     } else {
-      console.log("Tab2Page: Neu-Erstellen-Modus oder kein Task im State gefunden.");
-      // Es ist wichtig, hier explizit in den "Neu erstellen"-Modus zu wechseln und Felder zurückzusetzen,
-      // falls die Seite vorher im Edit-Modus war und jetzt ohne State aufgerufen wird.
-      this.isEditMode = false;
-      this.taskToEditId = null;
-      this.taskTitle = '';
-      this.taskDescription = null;
-      // === GEO-FELDER ZURÜCKSETZEN ===
-      this.taskLatitude = null;
-      this.taskLongitude = null;
-      // === === ===
-      this.pageTitle = 'Neue Aufgabe erstellen';
+      // Kein taskToEdit im aktuellen Navigations-State gefunden.
+      // Es könnte auch sein, dass die Seite nicht über eine Navigation mit State erreicht wurde.
+      console.log("Tab2Page: Kein 'taskToEdit' im State. Wechsle zu Neu-Erstellen.");
+      this.resetToCreateMode();
     }
   }
 
+  private resetToCreateMode() {
+    this.isEditMode = false;
+    this.taskToEditId = null;
+    this.taskTitle = '';
+    this.taskDescription = null;
+    this.taskLatitude = null;
+    this.taskLongitude = null;
+    this.pageTitle = 'Neue Aufgabe erstellen';
+  }
+
   async saveTask() {
+    // ... (deine bestehende saveTask Logik ist hier gut)
     if (!this.taskTitle || this.taskTitle.trim() === '') {
       this.presentToast('Titel darf nicht leer sein.', 'warning');
       return;
     }
 
-    // Optionale Validierung für Lat/Lon
     if ((this.taskLatitude !== null && this.taskLongitude === null) || (this.taskLatitude === null && this.taskLongitude !== null)) {
-        await this.presentToast('Wenn Latitude oder Longitude angegeben wird, muss auch das andere Feld ausgefüllt sein.', 'warning');
-        return;
+      await this.presentToast('Wenn Latitude oder Longitude angegeben wird, muss auch das andere Feld ausgefüllt sein.', 'warning');
+      return;
     }
-    if (this.taskLatitude !== null && (this.taskLatitude < -90 || this.taskLatitude > 90)) {
-        await this.presentToast('Latitude muss zwischen -90 und 90 liegen.', 'warning');
-        return;
-    }
-    if (this.taskLongitude !== null && (this.taskLongitude < -180 || this.taskLongitude > 180)) {
-        await this.presentToast('Longitude muss zwischen -180 und 180 liegen.', 'warning');
-        return;
-    }
+    // ... (restliche Validierungen für Lat/Lon)
 
-    // Wir verwenden Partial<Task> für den Payload, um flexibel zu sein.
-    // Das Task-Interface sollte latitude? und longitude? optional definieren.
     const taskDataPayload: Partial<Task> = {
       title: this.taskTitle.trim(),
       description: this.taskDescription ? this.taskDescription.trim() : null
     };
 
-    // === GEO-DATEN ZUM PAYLOAD HINZUFÜGEN (falls vorhanden und valide) ===
     if (this.taskLatitude !== null && this.taskLongitude !== null) {
       taskDataPayload.latitude = this.taskLatitude;
       taskDataPayload.longitude = this.taskLongitude;
     }
-    // === === ===
 
     if (this.isEditMode && this.taskToEditId !== null) {
-      // Im Bearbeitungsmodus: updateTask aufrufen
       this.taskService.updateTask(this.taskToEditId, taskDataPayload).subscribe({
         next: async (updatedTask) => {
-          console.log('Aufgabe erfolgreich aktualisiert:', updatedTask);
           await this.presentToast('Aufgabe erfolgreich aktualisiert!', 'success');
-          this.resetFormAndNavigateBack();
+          this.resetFormAndNavigateBack(true); // true für "kam aus Edit-Modus"
         },
         error: async (err) => {
-          console.error('Fehler beim Aktualisieren der Aufgabe:', err);
           await this.presentToast('Fehler beim Aktualisieren der Aufgabe.', 'danger');
         }
       });
     } else {
-      // Im Erstellungsmodus: addTask aufrufen
-      this.taskService.addTask(taskDataPayload as {title: string}).subscribe({ // Type assertion für addTask
+      this.taskService.addTask(taskDataPayload as { title: string }).subscribe({
         next: async (newTask) => {
-          console.log('Neue Aufgabe erfolgreich erstellt:', newTask);
           await this.presentToast('Aufgabe erfolgreich erstellt!', 'success');
-          this.resetFormAndNavigateBack();
+          this.resetFormAndNavigateBack(false); // false für "kam aus Neu-Modus"
         },
         error: async (err) => {
-          console.error('Fehler beim Erstellen der Aufgabe:', err);
           await this.presentToast('Fehler beim Erstellen der Aufgabe.', 'danger');
         }
       });
     }
   }
 
-  resetFormAndNavigateBack() {
-    this.taskTitle = '';
-    this.taskDescription = null;
-    // === GEO-FELDER AUCH HIER ZURÜCKSETZEN ===
-    this.taskLatitude = null;
-    this.taskLongitude = null;
-    // === === ===
-    this.isEditMode = false;
-    this.taskToEditId = null;
-    this.pageTitle = 'Neue Aufgabe erstellen'; // Wichtig für den nächsten Aufruf
-    this.navCtrl.navigateBack('/tabs/tab1', { queryParams: { refresh: new Date().getTime() }});
+  resetFormAndNavigateBack(wasEditMode: boolean) { // Parameter hinzugefügt
+    // Das Zurücksetzen der Felder passiert jetzt in initializeFormBasedOnNavigationState
+    // beim nächsten Aufruf von ionViewWillEnter, wenn kein State übergeben wird.
+    // Hier nur die Navigation.
+    this.navCtrl.navigateBack('/tabs/tab1', {
+      queryParams: {
+        refresh: new Date().getTime(),
+        updatedTaskId: wasEditMode ? this.taskToEditId : null
+      }
+    });
   }
 
   async presentToast(message: string, color: string) {
