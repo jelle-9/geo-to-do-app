@@ -18,6 +18,8 @@ import {
   locationOutline
 } from 'ionicons/icons';
 
+import * as L from 'leaflet';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -41,6 +43,14 @@ export class AppComponent {
       'ellipse': ellipse,
       'square': square,
       'triangle': triangle
+    });
+
+    delete (L.Icon.Default.prototype as any)._getIconUrl; 
+
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png', // Pfad relativ zum Build-Output
+      iconUrl: 'assets/leaflet/marker-icon.png',
+      shadowUrl: 'assets/leaflet/marker-shadow.png',
     });
   }
 }

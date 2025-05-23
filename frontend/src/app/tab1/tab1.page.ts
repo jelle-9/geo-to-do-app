@@ -30,7 +30,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private taskService: TaskService,
     private alertCtrl: AlertController,
-    private modalCtrl: ModalController,
+
     private navCtrl: NavController
   ) {}
 
@@ -64,8 +64,8 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
 
         if(document.getElementById(mapId)) {
 
-          const latitude = task.latitude !== undefined ? task.latitude : this.defaultLatitude;
-          const longitude = task.longitude !== undefined ? task.longitude : this.defaultLongitude;
+          const latitude = task.latitude ?? this.defaultLatitude;
+          const longitude = task.longitude ?? this.defaultLongitude;
 
           const map = L.map(mapId).setView([latitude, longitude], 13);
 
