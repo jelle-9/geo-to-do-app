@@ -47,7 +47,12 @@ export class TaskService {
    * @param taskData Die Daten für den neuen Task (mindestens Titel, Beschreibung optional).
    * @returns Ein Observable mit dem vom Backend erstellten Task-Objekt (inkl. ID, Zeitstempel).
    */
-  addTask(taskData: { title: string; description?: string | null }): Observable<Task> {
+  addTask(taskData: { 
+    title: string;
+    description?: string | null;
+    latitude?: number | null;
+    longitude?: number |null;
+  }): Observable<Task> {
     return this.http.post<Task>(`${this.apiUrl}/tasks`, taskData);
   }
 

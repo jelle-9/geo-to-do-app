@@ -6,4 +6,6 @@ export interface Task {
     created_at: string;
     updated_at: string;
     // TODO: Geo-Daten hinzufügen
+    latitude?: number | null;
+    longitude?: number | null;
 }

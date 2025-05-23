@@ -53,6 +53,10 @@
         <ion-icon slot="start" name="trash-outline"></ion-icon>
         Löschen
       </ion-button>
+      <div *ngIf="task.latitude !== null && task.longitude !== null" style="font-size: 0.8em; color: grey; margin-top: 5px;">
+        <ion-icon name="location-outline" style="vertical-align: middle;"></ion-icon>
+        Lat: {{ task.latitude }}, Lon: {{ task.longitude }}
+      </div>
     </ion-card>
 
   </ion-list>

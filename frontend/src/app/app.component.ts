@@ -14,7 +14,8 @@ import {
   sendOutline,  // Beispiel für Tab3
   ellipse, // Wird oft für Tab-Badges oder als Fallback genutzt
   square,  // Weiteres Beispiel
-  triangle // Weiteres Beispiel
+  triangle, // Weiteres Beispiel
+  locationOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -31,6 +32,7 @@ export class AppComponent {
       'trash-outline': trashOutline,
       'create-outline': createOutline,
       'add': add,
+      'location-outline': locationOutline,
       // Tab-Bar Icons:
       'flash-outline': flashOutline,
       'apps-outline': appsOutline,
