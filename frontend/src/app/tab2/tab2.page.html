@@ -18,6 +18,16 @@
     <ion-textarea [(ngModel)]="taskDescription" rows="5"></ion-textarea>
   </ion-item>
 
+  <ion-item-divider style="margin-top: 15px;">
+    <ion-label>Standort auf Karte auswählen</ion-label>
+  </ion-item-divider>
+  <div style="height: 300px; width: 100%; margin-top: 10px; margin-bottom: 10px; border: 1px solid #ccc;"
+       leaflet
+       [leafletOptions]="mapOptions" 
+       (leafletMapReady)="onMapReady($event)"
+       (leafletClick)="onMapClick($event)">
+  </div>
+
   <ion-item>
     <ion-label position="floating">Breitengrad (Latitude)</ion-label>
     <ion-input type="number" [(ngModel)]="taskLatitude"></ion-input>
