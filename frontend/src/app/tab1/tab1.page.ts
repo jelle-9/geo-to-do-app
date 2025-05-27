@@ -6,7 +6,9 @@ import { Task } from '../models/task.interface';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 
-import { AlertController, ModalController, NavController } from '@ionic/angular/standalone';
+import {ToastController, AlertController, NavController } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle } from 'ionicons/icons';
 
 import * as L from 'leaflet';
 //import { mapToCanDeactivate } from '@angular/router';
@@ -30,9 +32,12 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private taskService: TaskService,
     private alertCtrl: AlertController,
-
+    private toastCtrl: ToastController,
     private navCtrl: NavController
-  ) {}
+  ) {
+    // Icons registrieren, damit sie in der UI angezeigt werden können
+    addIcons({ checkmarkCircle });
+  }
 
   ionViewWillEnter() {
     this.loadTasks();
@@ -161,6 +166,52 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
         taskToEdit: task // Übergebe den Task zur Bearbeitung
       }
     });
+  }
+
+  // Funktion zum Bearbeiten "Erledigt"-Status
+  async onToggleTaskDone(task: Task, event: any) {
+    // Den neuen Status des Toggles abrufen (true/false)
+    const newIsDoneState = event.detail.checked; 
+    console.log(`Bearbeitung des Tasks ${task.id}: is_done = ${newIsDoneState}`);
+
+     // Ein Payload-Objekt nur mit dem zu aktualisierenden Feld erstellen
+    const payload: Partial<Task> = {
+      is_done: newIsDoneState
+    };
+
+    // Service aufrufen, um den Task im Backend zu aktualisieren
+    this.taskService.updateTask(task.id, payload).subscribe({
+      next: async (updatedTask) => {
+        console.log('Bearbeitung des Tasks erfolgreich:', updatedTask);
+
+        // Lokalen Task-Status im UI aktualisieren
+        const index = this.tasks.findIndex(t => t.id === updatedTask.id);
+        if (index > -1) {
+          this.tasks[index].is_done = updatedTask.is_done; // UI-Update sicherstellen
+        }
+        // Erfolgsmeldung anzeigen
+        await this.presentToast(`Task '${updatedTask.title}' ist ${updatedTask.is_done ? 'erledigt' : 'nicht erledigt'}.`, 'success');
+
+      },
+      error: async (err) => {
+        console.error('Error bei der Änderung des Tasks:', err);
+        // Fehlermeldung anzeigen
+        await this.presentToast('Error bei der Änderung des Tasks.', 'danger');
+        // Bei einem Fehler im Backend den UI-Status des Toggles zurücksetzen
+        task.is_done = !newIsDoneState; // Toggle-Status zurücksetzen
+      }
+    });
+  }
+
+  // Hilfsfunktion zur Anzeige von Toast-Nachrichten
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 2000,
+      color: color,
+      position: 'top',
+    });
+    await toast.present();
   }
 
   // Funktion zum Navigieren zur Seite zum Hinzufügen eines neuen Tasks

@@ -5,3 +5,48 @@ ion-list {
     gap: 16px;
     justify-content: center;
 }
+
+ion-item {
+    position: relative;
+    --inner-padding-end: 0px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+}
+
+.tick-container {
+  position: absolute;
+  right: 60px; // Diese Werte je nach Bedarf anpassen
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  // Diese sind die initialen Zustände für die Animation, wenn das Element in das DOM eingefügt wird
+  opacity: 0;
+  transform: scale(0.5);
+
+  // Die Transition-Eigenschaft, die die Animation auslöst
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+
+  pointer-events: none; // Damit der Klick auf den Toggle nicht blockiert wird
+}
+
+// Wenn das Element durch *ngIf im DOM ist, wird es durch die Initialwerte und die Transition animiert.
+// Es ist nicht notwendig, explizit opacity: 1 oder transform: scale(1) hier zu setzen,
+// da die Transition auf den Übergang von 0/0.5 zu den normalen (nicht-explizit-definierten) Werten reagiert.
+// Aber zur Klarheit können wir es definieren, falls das Element immer sichtbar sein sollte, wenn es da ist.
+// Letzten Endes ist der Standardwert für Opacity 1, und für Transform 'none' (was skaliert ist 1)
+
+// Wenn das Element im DOM ist (durch *ngIf="true"), soll es sichtbar sein
+// Die Animation erfolgt, wenn das Element in das DOM eingefügt wird.
+.tick-container {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkmark-icon {
+  font-size: 20px;
+  color: var(--ion-color-success); // Verwende wieder die Ionic Success Farbe
+  // Wenn dein Hintergrund wirklich sehr dunkel ist und var(--ion-color-success) nicht gut sichtbar ist,
+  // kannst du hier eine sehr helle Farbe wie 'white' oder '#e0e0e0' verwenden.
+}
