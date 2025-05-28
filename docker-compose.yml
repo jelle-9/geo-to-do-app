@@ -1,5 +1,5 @@
 # docker-compose.yml
-version: '3.8' # Spezifiziert die Version der Docker Compose Syntax
+# version: '3.8' # Spezifiziert die Version der Docker Compose Syntax
 
 services:
   # Backend Service (Python App)
@@ -65,6 +65,26 @@ services:
       retries: 5
     restart: always
 
+  nominatim:
+    image: mediagis/nominatim:5.1 # Aktualisierte Version
+    container_name: geo_nominatim_local
+    ports:
+      - "8090:8080" # Host-Port 8090 mappt auf Container-Port 8080
+    environment:
+      PBF_PATH: /data/berlin-latest.osm.pbf # Pfad zur .osm.pbf Datei im Container
+      NOMINATIM_MODE: "create" # Modus für den ersten Start: Datenbank erstellen und importieren
+      THREADS: "4" # Anzahl der Threads für den Import (anpassen je nach Systemleistung)
+      # IMPORT_STYLE: "full" # Standard, kann für kleinere Datensets angepasst werden (z.B. "street" oder "address")
+    volumes:
+      - nominatim_pgdata:/var/lib/postgresql/14/main # Persistentes Volume für Nominatim-DB-Daten
+      - ./osm_data:/data:ro # Mountet deinen lokalen Ordner ./osm_data (wo berlin-latest.osm.pbf liegt)
+                            # schreibgeschützt (:ro) in den /data Ordner des Containers.
+    restart: unless-stopped
+    # Optional: Speichergrenze für den Nominatim-Container, falls Ressourcen knapp sind.
+    # Für Berlin sollte das aber ohne Limits gut laufen, wenn dein System genug RAM hat (mind. 8GB gesamt empfohlen).
+    # mem_limit: 8g 
+
 # Definiert das benannte Volume für die Persistenz der Datenbankdaten
 volumes:
   pgdata:
+  nominatim_pgdata:
