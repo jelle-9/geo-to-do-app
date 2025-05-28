@@ -5,6 +5,7 @@ import { Observable } from 'rxjs'; // Ein Kernkonzept von RxJS (Reactive Extensi
 import {map} from 'rxjs/operators'; // Ein RxJS-Operator, um Daten innerhalb eines Observable-Streams zu transformieren.
 import {Task} from '../models/task.interface'; // Das TypeScript-Interface, das die Struktur eines Task-Objekts definiert.
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,7 +15,9 @@ export class TaskService {
 
   // Angulars Dependency Injection System stellt automatisch eine Instanz des HttpClient-Service bereit und
   // weist sie der privaten Eigenschaft http zu -> this.http (TypeScript).
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient
+    ) { }
   
   /**
    * Ruft alle Tasks vom Backend ab.
@@ -75,4 +78,6 @@ export class TaskService {
   deleteTask(id: number): Observable<any> { // 'any' oder 'void', wenn keine Antwort erwartet wird
     return this.http.delete<any>(`${this.apiUrl}/tasks/${id}`);
   }
+
+  
 }

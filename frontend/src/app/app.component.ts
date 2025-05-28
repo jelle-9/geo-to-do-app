@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 // import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 
 import { addIcons } from 'ionicons';
 import { 
@@ -25,6 +26,7 @@ import * as L from 'leaflet';
   templateUrl: 'app.component.html',
   standalone: true,
   imports: [IonicModule],
+  providers: [Geolocation]
 })
 export class AppComponent {
   constructor() {

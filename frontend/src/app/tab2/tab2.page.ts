@@ -9,12 +9,15 @@ import { Task } from '../models/task.interface'; // Importiere das Task-Interfac
 import { LeafletModule } from '@bluehalo/ngx-leaflet';
 import  * as L from 'leaflet'; // Leaflet für Karten
 
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
+
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, LeafletModule] // FormsModule hier hinzufügen!
+  imports: [IonicModule, CommonModule, FormsModule, LeafletModule],// FormsModule hier hinzufügen!
+ 
 })
 export class Tab2Page {
   taskTitle: string = '';
@@ -24,45 +27,61 @@ export class Tab2Page {
   taskLatitude: number | null = null;
   taskLongitude: number | null = null;
 
+  // Eigenschaften, um die aktuellen Kartenkoordinaten zu speichern
+  currentMapCenterLatitude: number | null = null;
+  currentMapCenterLongitude: number | null = null;
+
   pageTitle: string = 'Aufgabe erstellen'; // Titel der Seite
   isEditMode: boolean = false; // Flag für den Bearbeitungsmodus
   private taskToEditId: number | null = null; // ID des Tasks, falls im Bearbeitungsmodus
 
-map!: L.Map;
-mapOptions: L.MapOptions = {
-  layers: [
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    })
-  ],
-  zoom: 6,
-  center: L.latLng(52.5362, 13.3400) // DFKI Labor Berlin
-};
-private marker: L.Marker | null = null;
-private defaultMapCenter = L.latLng(52.5362, 13.3400);
-private defaultMapZoom = 9;
-private taskMapZoom = 14;
+  map!: L.Map;
+  mapOptions: L.MapOptions = {
+    layers: [
+      L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      })
+    ],
+    zoom: 6,
+    center: L.latLng(52.5362, 13.3400) // DFKI Labor Berlin
+  };
+  private marker: L.Marker | null = null;
+  private defaultMapCenter = L.latLng(52.5362, 13.3400);
+  private defaultMapZoom = 13;
+  private taskMapZoom = 14;
 
-  constructor(
-    private taskService: TaskService,
-    private navCtrl: NavController,
-    private toastCtrl: ToastController,
-    private router: Router // Router für Navigation
-  ) {}
+    constructor(
+      private taskService: TaskService,
+      private navCtrl: NavController,
+      private toastCtrl: ToastController,
+      private router: Router, // Router für Navigation
+      private geolocation: Geolocation
+    ) {}
 
   // Statt ngOnInit ist ionViewWillEnter oft besser für Ionic-Seiten, feuert bei jedem Seitenaufruf nicht nur beim ersten Mal
   ionViewWillEnter() {
+    // Rufe die aktuelle Geräteposition ab, sobald die Komponente initialisiert wird
+    // this.getCurrentDeviceLocation().then(location => {
+    //   if (location) {
+    //     console.log('NGONINIT: Aktuelle Position des Geräts:', location);
+    //     // Hier könnten Sie die Karte auf diese Position zentrieren oder die Felder aktualisieren
+    //     // Das werden wir in der nächsten Aufgabe tun!
+    //   } else {
+    //     console.log('NGONINIT: Geräteposition konnte nicht abgerufen werden.');
+    //   }
+    // })
     console.log("Tab2Page: ionViewWillEnter aufgerufen.");
     this.initializeFormBasedOnNavigationState();
   }
 
-  private initializeFormBasedOnNavigationState() {
+  private async initializeFormBasedOnNavigationState() {
     // Statt router.getCurrentNavigation() verwenden wir window.history.state für bessere Robustheit
     const state = window.history.state;
     console.log("Tab2Page: window.history.state liefert:", state); // Wichtiges Log!
 
     if (state?.taskToEdit && typeof state.taskToEdit.id !== 'undefined') {
+      // Bearbeitungsmodus
       const task = state.taskToEdit as Task;
       console.log("Tab2Page: Edit-Modus erkannt mit Task:", task);
       this.isEditMode = true;
@@ -72,12 +91,47 @@ private taskMapZoom = 14;
       this.taskLatitude = task.latitude ?? null;
       this.taskLongitude = task.longitude ?? null;
       this.pageTitle = 'Aufgabe bearbeiten';
+
+       // Kartenzentrierung für den Bearbeitungsmodus: Koordinaten des Tasks verwenden
+      this.currentMapCenterLatitude = this.taskLatitude;
+      this.currentMapCenterLongitude = this.taskLongitude;
     } else {
-      console.log("Tab2Page: Neu-Erstellen-Modus oder kein Task im State gefunden.");
-      this.resetToCreateMode(); // Stellt sicher, dass alle Felder zurückgesetzt sind
+        // Neu-Erstellen-Modus
+        console.log("Tab2Page: Neu-Erstellen-Modus oder kein Task im State gefunden.");
+        this.resetToCreateMode(); // Stellt sicher, dass alle Felder zurückgesetzt sind
+        // Hier wird die Geräteposition für die neue Aufgabe abgerufen
+        try {
+          const deviceLocation = await this.getCurrentDeviceLocation(); // Ihre Methode aus Aufgabe 4
+          if (deviceLocation) {
+            this.currentMapCenterLatitude = deviceLocation.latitude;
+            this.currentMapCenterLongitude = deviceLocation.longitude;
+            console.log('Karte wird mit aktueller Geräteposition für neue Aufgabe initialisiert:', deviceLocation);
+          } else {
+            // Fallback auf Standardposition, wenn Geräteposition nicht verfügbar ist
+            this.currentMapCenterLatitude = this.defaultMapCenter.lat;
+            this.currentMapCenterLongitude = this.defaultMapCenter.lng;
+            console.log('Geräteposition konnte nicht abgerufen werden. Karte wird mit Standardposition initialisiert.');
+          }
+        } catch (error) {
+          console.error('Fehler beim Abrufen der Geräteposition für die Initialisierung:', error);
+          // Fallback im Fehlerfall
+          this.currentMapCenterLatitude = this.defaultMapCenter.lat;
+          this.currentMapCenterLongitude = this.defaultMapCenter.lng;
+        }
     }
-    // Kartenoptionen und Ansicht aktualisieren, nachdem Lat/Lon gesetzt wurden
-    this.configureMapBasedOnState();
+
+    // Stellen Sie sicher, dass die Karte neu zentriert und der Marker aktualisiert werden,
+    // nachdem alle Koordinaten (Task oder Geräteposition) gesetzt wurden.
+    // Ein kleiner Timeout kann hier helfen, falls das DOM noch nicht ganz bereit ist.
+    setTimeout(() => {
+        this.configureMapBasedOnState(); // Aktualisiert mapOptions
+        // Rufen Sie updateMapMarkerAndCenter HIER auf, nachdem configureMapBasedOnState()
+        // die Optionen aktualisiert hat UND die Karte (map-Objekt) existiert.
+        // Die 'onMapReady' wird sich auch darum kümmern, aber es ist gut, dies hier zu forcieren.
+        if (this.map) { // Stellen Sie sicher, dass die Karte bereits instanziiert wurde
+             this.updateMapMarkerAndCenter(true); 
+        }
+    }, 100);
   }
 
   private resetToCreateMode() {
@@ -97,7 +151,7 @@ private taskMapZoom = 14;
     // Container ist, der nicht sofort sichtbar ist (z.B. Tabs, Modals).
     setTimeout(() => {
       this.map.invalidateSize();
-      this.updateMapMarkerAndCenter(); // Setze initialen Marker und View
+      this.updateMapMarkerAndCenter(false); // Setze initialen Marker und View
     }, 100);
   }
 
@@ -112,11 +166,26 @@ private taskMapZoom = 14;
   }
   
   private configureMapBasedOnState() {
+    // Standardwerte, die verwendet werden, wenn keine spezifischen Koordinaten gesetzt sind
     let centerLat = this.defaultMapCenter.lat;
     let centerLon = this.defaultMapCenter.lng;
     let zoom = this.defaultMapZoom;
 
-    if (this.taskLatitude !== null && this.taskLongitude !== null) {
+    // Wenn spezifische Kartenmittelpunktkoordinaten gesetzt wurden (durch Bearbeitungsmodus oder Geräteposition)
+    if (this.currentMapCenterLatitude !== null && this.currentMapCenterLongitude !== null) {
+      centerLat = this.currentMapCenterLatitude;
+      centerLon = this.currentMapCenterLongitude;
+      // Der Zoom für die initiale Geräteposition oder Task-Position kann der taskMapZoom sein,
+      // oder ein anderer spezifischer Zoom, je nach Wunsch.
+      // Hier verwenden wir den defaultMapZoom für die initiale Ansicht,
+      // und der taskMapZoom wird nur angewendet, wenn es eine geladene Task-Position ist.
+      if (this.isEditMode) { // Wenn im Bearbeitungsmodus, verwende den Task-Zoom
+        zoom = this.taskMapZoom;
+      } else { // Wenn im Neu-Erstellen-Modus, könnte ein anderer Zoom passend sein, oder der default
+        zoom = this.defaultMapZoom; // Oder ein spezifischerer Zoom für die Geräteposition
+      }
+    } else if (this.taskLatitude !== null && this.taskLongitude !== null) {
+      // Fallback: Falls currentMapCenterX nicht gesetzt ist, aber taskLatitude/Longitude es sind (z.B. Bearbeitungsmodus)
       centerLat = this.taskLatitude;
       centerLon = this.taskLongitude;
       zoom = this.taskMapZoom;
@@ -152,7 +221,9 @@ private taskMapZoom = 14;
       } else { // Nur Marker verschoben, Karte nicht zwingend neu zentrieren/zoomen
         // this.map.panTo(latLng); // Sanftes Verschieben
       }
-    } else if (centerAndZoom) { // Keine Koordinaten, aber Karte soll auf Default zentriert werden
+    } else if (centerAndZoom && (this.currentMapCenterLatitude !== null && this.currentMapCenterLongitude !== null)) { // Keine Koordinaten, aber Karte soll auf Default zentriert werden
+        const latLng = L.latLng(this.currentMapCenterLatitude, this.currentMapCenterLongitude);
+        this.marker = L.marker(latLng).addTo(this.map);
         this.map.setView(this.defaultMapCenter, this.defaultMapZoom);
     }
   }
@@ -235,5 +306,34 @@ private taskMapZoom = 14;
       position: 'top'
     });
     await toast.present();
+  }
+
+  /**
+   * Ruft die aktuelle Geoposition des Geräts mit Cordova ab.
+   * @returns Ein Promise, das ein Objekt mit Längen- und Breitengrad zurückgibt, oder null bei Fehler.
+   */
+  async getCurrentDeviceLocation(): Promise<{latitude: number, longitude: number } | null> {
+    try {
+      // Optionen für den Geolocation-Aufruf
+      const options = {
+        timeout: 1000, // Maximale Wartezeit in Millisekunden
+        enableHighAccuracy: true // Versucht, eine genauere Position zu erhalten (kann länger dauern und mehr Batterie verbrauchen)
+      };
+
+      // Die aktuelle Position abrufen
+      const position = await this.geolocation.getCurrentPosition(options);
+      console.log('Aktuelle Geräteposition:', position); // Zum Debuggen in der Konsole anzeigen 
+      
+      // Breitengrad und Längengrad zurückgeben
+      return {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+    } catch (error) {
+        // Fehlerbehandlung, falls die Position nicht abgerufen werden kann (z.B. Berechtigung verweigert, Timeout)
+        console.error('Fehler beim Abrufen der Geräteposition:', error);
+        // Hier könnten Sie auch einen Alert oder Toast anzeigen, um den Benutzer zu informieren
+        return null;
+    }
   }
 }
